@@ -6,7 +6,11 @@ public class PollutionSystem : MonoBehaviour
 {
     public static event Action<PollutionSystem, int> OnPollutionSet;
 
+    public Material water;
+    public Material sky;
+
     private int _pollution = 0;
+    private int _pollutionID;
 
     public int Pollution
     {
@@ -14,6 +18,8 @@ public class PollutionSystem : MonoBehaviour
         private set
         {
             _pollution = Mathf.Clamp(value, 0, 100);
+            water.SetFloat(_pollutionID, _pollution / 100.0f);
+            sky.SetFloat(_pollutionID, _pollution / 100.0f);
             OnPollutionSet?.Invoke(this, _pollution);
             if (_pollution == 100) SceneManager.LoadScene("LossScene");
         }
@@ -28,6 +34,10 @@ public class PollutionSystem : MonoBehaviour
     private void Start()
     {
         Pollution = 0;
+        //water.SetFloat("Pollution", _pollution / 100.0f);
+        _pollutionID = Shader.PropertyToID("_Pollution");
+        water.SetFloat(_pollutionID, _pollution / 100.0f);
+        sky.SetFloat(_pollutionID, _pollution / 100.0f);
     }
 
     private void OnDestroy()

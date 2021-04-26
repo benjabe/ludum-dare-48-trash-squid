@@ -9,6 +9,7 @@ using UnityEngine;
 public class SquidController : MonoBehaviour
 {
     public static event Action<SquidController, Trash> OnDropTrash;
+    public Animator animator;
 
     [SerializeField, TweakableMember(group = "Squid")] private float _thrustForceMagnitude = 1.0f;
     [SerializeField] private float _relativeForceDirectionInDegrees = 0.0f;
@@ -16,6 +17,7 @@ public class SquidController : MonoBehaviour
     [SerializeField, TweakableMember(minValue = 0, maxValue = 5, group = "Squid")] private float _thrustTime = 0.5f;
     [SerializeField, TweakableMember(minValue = 0, maxValue = 5, group = "Squid")] private float _trashThrowDownFactor = 0.5f;
     [SerializeField, TweakableMember(minValue = 0, maxValue = 5, group = "Squid")] private float _trashThrowVelocityFactor = 0.5f;
+    [SerializeField, TweakableMember(minValue = 0, maxValue = 5, group = "Squid")] private float _dropTime = 0.5f;
     [SerializeField] private bool _canSpamThrust = false;
     [Header("Rigidbody parameters")]
     [SerializeField, TweakableMember(minValue = -5, maxValue = 5, group = "Squid")] private float _airGravityScale = 1.0f;
@@ -33,6 +35,7 @@ public class SquidController : MonoBehaviour
     private float _torque = 0.0f;
     private bool _inWater = false;
     private List<Trash> _pickedUpTrash = new List<Trash>();
+    private bool _canPickUp = true;
 
     private void Awake()
     {
@@ -68,13 +71,20 @@ public class SquidController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_isThrustQueued) Thrust();
+        if (_isThrustQueued)
+        {
+            Thrust();
+            animator.SetBool("Thrusting", true);
+        } else if (_canThrust && !_isThrustQueued)
+        {
+            animator.SetBool("Thrusting", false);
+        }
         ApplyTorque();
     }
 
     private void OnTrashCollideWithSquipPickUpCollider(Trash trash, TrashDetector collider)
     {
-        if (collider == _trashCollider) PickUpTrash(trash);
+        if (collider == _trashCollider && _canPickUp) PickUpTrash(trash);
     }
 
     private void HandleHeldThrust()
@@ -119,10 +129,18 @@ public class SquidController : MonoBehaviour
         _pickedUpTrash.Add(trash);
     }
 
+    private IEnumerator ResetPickUp()
+    {
+        yield return new WaitForSeconds(_dropTime);
+        _canPickUp = true;
+    }
+
     private void DropAllTrash()
     {
         foreach (var trash in _pickedUpTrash.ToList())
             DropTrash(trash);
+        _canPickUp = false;
+        StartCoroutine(ResetPickUp());
     }
 
     private void DropTrash(Trash trash)

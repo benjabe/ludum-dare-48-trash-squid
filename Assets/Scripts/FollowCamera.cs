@@ -28,7 +28,13 @@ public class FollowCamera : MonoBehaviour
         var lerpValue = _lerpValuePerSecond * Time.deltaTime;
         var movementMagnitudeThisFrame = Mathf.Lerp(0.0f, distanceToTarget.magnitude, lerpValue);
         var movementThisFrame = directionToTarget * movementMagnitudeThisFrame;
+        float xPos = transform.position.x;
+        float yPos = transform.position.y;
+        float zPos = transform.position.z;
         movementThisFrame.z = 0;
         transform.position += movementThisFrame;
+        xPos = Mathf.Clamp(xPos + movementThisFrame.x, -30.0f, 30.0f);
+        yPos = Mathf.Clamp(yPos + movementThisFrame.y, -88.0f, 10.0f);
+        transform.position = new Vector3(xPos, yPos, zPos);
     }
 }
